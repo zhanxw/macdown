@@ -10,21 +10,20 @@ The original project is [MacDownApp/macdown](https://github.com/MacDownApp/macdo
 
 ## Install
 
-1. Open the [Build DMG workflow](https://github.com/zhanxw/macdown/actions/workflows/build-dmg.yml)
-   and select a successful run for `master`.
-2. Download the `MacDown-universal-dmg` artifact (GitHub sign-in is required)
-   and unzip it.
-3. Open `MacDown-universal.dmg` and drag **MacDown.app** to **Applications**.
+1. Download [**MacDown-universal.dmg**](https://github.com/zhanxw/macdown/releases/latest/download/MacDown-universal.dmg)
+   from the [latest release](https://github.com/zhanxw/macdown/releases/latest).
+   No GitHub account is required.
+2. Open the DMG and drag **MacDown.app** to **Applications**.
+   Quit any running copy before replacing it.
 
 The DMG contains a universal app for Apple Silicon and Intel. Builds are
 ad-hoc signed, without Apple notarization or a Developer ID certificate;
 macOS may block the downloaded app until you approve it in **System Settings →
-Privacy & Security**. Only approve builds you trust. The artifact also includes
-a SHA-256 checksum file.
+Privacy & Security**. Only approve builds you trust. Each release also includes a SHA-256 checksum file.
 
 Upstream downloads and the Homebrew cask are separate from this fork and do
 not include these changes. The app's existing updater still uses the upstream
-feed; obtain updated builds of this fork from the workflow artifacts.
+feed; obtain updated builds of this fork from this repository’s releases.
 
 ## Screenshot
 
@@ -117,6 +116,9 @@ It installs the locked dependencies, runs the tests with Release optimization
 on ARM64, builds both architectures, verifies the code signature and CPU
 architectures, and packages the app with an Applications shortcut.
 
+Published downloads are available on the [Releases page](https://github.com/zhanxw/macdown/releases).
+For development snapshots, select a successful [workflow run](https://github.com/zhanxw/macdown/actions/workflows/build-dmg.yml)
+and download its `MacDown-universal-dmg` artifact (GitHub sign-in required).
 DMGs and checksums are retained as workflow artifacts for 30 days; test results
 are retained for 7 days. Tag builds also produce artifacts; the workflow does
 not create GitHub releases. No signing credentials are required.
