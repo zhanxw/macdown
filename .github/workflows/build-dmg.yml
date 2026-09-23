@@ -58,9 +58,11 @@ jobs:
             ONLY_ACTIVE_ARCH=NO 'ARCHS=arm64 x86_64' \
             CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=YES build
           app=Build/Build/Products/Release/MacDown.app
-          lipo "$app/Contents/MacOS/MacDown" -verify_arch arm64 x86_64
-          lipo Build/Build/Products/Release/macdown -verify_arch arm64 x86_64
-          lipo "$app/Contents/Frameworks/Sparkle.framework/Sparkle" -verify_arch arm64 x86_64
+          for arch in arm64 x86_64; do
+            lipo "$app/Contents/MacOS/MacDown" -verify_arch "$arch"
+            lipo Build/Build/Products/Release/macdown -verify_arch "$arch"
+            lipo "$app/Contents/Frameworks/Sparkle.framework/Sparkle" -verify_arch "$arch"
+          done
           codesign --verify --deep --strict "$app"
 
       - name: Package DMG
