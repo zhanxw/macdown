@@ -14,6 +14,6 @@ xcodebuild -workspace MacDown.xcworkspace -scheme MacDown \
     CODE_SIGNING_REQUIRED=YES build
 
 app="$PWD/Build/Build/Products/Release/MacDown.app"
-lipo -verify_arch "$(uname -m)" "$app/Contents/MacOS/MacDown"
+lipo "$app/Contents/MacOS/MacDown" -verify_arch "$(uname -m)"
 codesign --verify --deep --strict "$app"
 printf '\nBuilt app: %s\n' "$app"
