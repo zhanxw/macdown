@@ -32,17 +32,22 @@ function get_short_version() {
 # Bundle version (commits-on-master[-until-branch "." commits-on-branch])
 # Assumes that two release branches will not diverge from the same commit on master.
 function get_bundle_version() {
+    # Tag checkouts in CI have origin/master but no local master branch.
+    local master_ref
+    master_ref=$(git rev-parse --verify refs/heads/master 2>/dev/null) \
+        || master_ref=$(git rev-parse --verify refs/remotes/origin/master 2>/dev/null) \
+        || master_ref=$(git rev-parse HEAD)
     if [ $(git rev-parse --abbrev-ref HEAD) = "master" ]; then
         MASTER_COMMIT_COUNT=$(git rev-list --count HEAD)
         BRANCH_COMMIT_COUNT=0
         BUNDLE_VERSION="$MASTER_COMMIT_COUNT"
     else
-        if [ $(git rev-list --count master..) = 0 ]; then   # The branch is attached to master. Just count master.
+        if [ $(git rev-list --count "${master_ref}"..) = 0 ]; then   # The branch is attached to master. Just count master.
             MASTER_COMMIT_COUNT=$(git rev-list --count HEAD)
         else
-            MASTER_COMMIT_COUNT=$(git rev-list --count $(git rev-list master.. | tail -n 1)^)
+            MASTER_COMMIT_COUNT=$(git rev-list --count $(git rev-list "${master_ref}".. | tail -n 1)^)
         fi
-        BRANCH_COMMIT_COUNT=$(git rev-list --count master..)
+        BRANCH_COMMIT_COUNT=$(git rev-list --count "${master_ref}"..)
         if [ $BRANCH_COMMIT_COUNT = 0 ]; then
             BUNDLE_VERSION="$MASTER_COMMIT_COUNT"
         else
