@@ -1,11 +1,13 @@
-NODE_SASS = node_modules/.bin/node-sass
+SASS = node_modules/.bin/sass
 
 target = ../../MacDown/Resources/Styles/GitHub-2020.css
 
 all: $(target)
 
 $(target): index.sass package-lock.json
-	$(NODE_SASS) --include-path node_modules $< | sed s/.markdown-body/body/ > $@
+	$(SASS) --no-source-map --load-path=node_modules $< $@.tmp
+	sed 's/\.markdown-body/body/g' $@.tmp > $@
+	$(RM) $@.tmp
 
 clean:
 	$(RM) $(target)

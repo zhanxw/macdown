@@ -1,19 +1,30 @@
 # MacDown
 
-[![](https://img.shields.io/github/release/MacDownApp/macdown.svg)](http://macdown.uranusjr.com/download/latest/)
-![Total downloads](https://img.shields.io/github/downloads/MacDownApp/macdown/latest/total.svg)
-[![Build Status](https://travis-ci.org/MacDownApp/macdown.svg?branch=master)](https://travis-ci.org/MacDownApp/macdown)
+[![Build DMG](https://github.com/zhanxw/macdown/actions/workflows/build-dmg.yml/badge.svg)](https://github.com/zhanxw/macdown/actions/workflows/build-dmg.yml)
 
+MacDown is an open source Markdown editor for macOS, released under the MIT
+License. This fork adds native Apple Silicon support, keeps Intel support,
+and fixes a crash when creating document toolbars. It requires macOS 12 or later.
 
-MacDown is an open source Markdown editor for OS X, released under the MIT License. The author stole the idea from [Chen Luo](https://twitter.com/chenluois)’s [Mou](http://mouapp.com) so that people can make crappy clones.
-
-Visit the [project site](http://macdown.uranusjr.com/) for more information, or download [MacDown.app.zip](http://macdown.uranusjr.com/download/latest/) directly from the [latest releases](https://github.com/MacDownApp/macdown/releases/latest) page.
+The original project is [MacDownApp/macdown](https://github.com/MacDownApp/macdown).
 
 ## Install
 
-[Download](http://macdown.uranusjr.com/download/latest/), unzip, and drag the app to Applications folder. MacDown is also available through [Homebrew Cask](https://caskroom.github.io/):
+1. Open the [Build DMG workflow](https://github.com/zhanxw/macdown/actions/workflows/build-dmg.yml)
+   and select a successful run for `master`.
+2. Download the `MacDown-universal-dmg` artifact (GitHub sign-in is required)
+   and unzip it.
+3. Open `MacDown-universal.dmg` and drag **MacDown.app** to **Applications**.
 
-    brew install --cask macdown
+The DMG contains a universal app for Apple Silicon and Intel. Builds are
+ad-hoc signed, without Apple notarization or a Developer ID certificate;
+macOS may block the downloaded app until you approve it in **System Settings →
+Privacy & Security**. Only approve builds you trust. The artifact also includes
+a SHA-256 checksum file.
+
+Upstream downloads and the Homebrew cask are separate from this fork and do
+not include these changes. The app's existing updater still uses the upstream
+feed; obtain updated builds of this fork from the workflow artifacts.
 
 ## Screenshot
 
@@ -47,37 +58,81 @@ The following editor themes and CSS files are extracted from [Mou](http://mouapp
 
 ### Requirements
 
-If you wish to build MacDown yourself, you will need the following components/tools:
+* macOS 12 or later (Apple Silicon or Intel)
+* Full Xcode with the macOS SDK, selected with `xcode-select`
+* Ruby 3.2 or later and Bundler 4 (the system Ruby is too old)
+* Node.js 18 or later and npm
 
-* OS X SDK (10.14 or later)
-* Git
-* [Bundler](http://bundler.io)
+On Apple Silicon, Homebrew Ruby can be installed and selected with:
 
-> Note: Old versions of CocoaPods are not supported. Please use Bundler to execute CocoaPods, or make sure your CocoaPods is later than shown in `Gemfile.lock`.
-
-> Note: The Command Line Tools (CLT) should be unnecessary. If you failed to compile without it, please install CLT with
->
->     xcode-select --install
->
-> and report back.
-
-An appropriate SDK should be bundled with Xcode 5 or later versions.
+```sh
+brew install ruby
+export PATH="$(brew --prefix ruby)/bin:$PATH"
+```
 
 ### Environment Setup
 
-After cloning the repository, run the following commands inside the repository root (directory containing this `README.md` file):
+Run these commands in the repository root:
 
-    git submodule update --init
-    bundle install
-    bundle exec pod install
-    make -C Dependency/peg-markdown-highlight
+```sh
+git submodule update --init --recursive
+bundle config set --local path vendor/bundle
+bundle install
+bundle exec pod install
+npm ci --prefix Tools/GitHub-style-generator
+make -C Dependency/peg-markdown-highlight
+```
 
-and open `MacDown.xcworkspace` in Xcode. The first command initialises the dependency submodule(s) used in MacDown; the second one installs dependencies managed by CocoaPods.
+Open `MacDown.xcworkspace` in Xcode, or build a locally signed native app:
 
-Refer to the official guides of Git and CocoaPods if you need more instructions. If you run into build issues later on, try running the following commands to update dependencies:
+```sh
+./Tools/build-native.sh
+open Build/Build/Products/Release/MacDown.app
+```
 
-    git submodule update
-    bundle exec pod install
+The resulting app runs natively on the Mac used to build it, without Rosetta
+on Apple Silicon. You can copy it to Applications when ready. Local builds
+use ad-hoc signing; distributing to other Macs requires Developer ID signing
+and notarization.
+
+Release builds in Xcode use the standard architectures (`arm64` and `x86_64`).
+To build both explicitly from the command line:
+
+```sh
+xcodebuild -workspace MacDown.xcworkspace -scheme MacDown \
+  -configuration Release -derivedDataPath Build \
+  ONLY_ACTIVE_ARCH=NO 'ARCHS=arm64 x86_64' CODE_SIGN_IDENTITY=- build
+```
+
+The deployment target is macOS 12 throughout the app and source dependencies.
+Sparkle 1.27.3 supplies a universal framework while preserving the existing
+updater API. The stylesheet generator uses Dart Sass instead of the obsolete
+native `node-sass` extension.
+
+### Automated DMG builds
+
+[`.github/workflows/build-dmg.yml`](.github/workflows/build-dmg.yml) runs on pushes
+to `master` or `main`, `v*` tags, pull requests, and manual **Run workflow** requests.
+It installs the locked dependencies, runs the tests with Release optimization
+on ARM64, builds both architectures, verifies the code signature and CPU
+architectures, and packages the app with an Applications shortcut.
+
+DMGs and checksums are retained as workflow artifacts for 30 days; test results
+are retained for 7 days. Tag builds also produce artifacts; the workflow does
+not create GitHub releases. No signing credentials are required.
+
+After building the universal app with the command above, package it locally:
+
+```sh
+./Tools/package-dmg.sh
+```
+
+The output is `Build/DMG/MacDown-universal.dmg`. To package a native build instead:
+
+```sh
+./Tools/build-native.sh
+./Tools/package-dmg.sh Build/Build/Products/Release/MacDown.app Build/DMG/MacDown-native.dmg
+```
 
 ### Translation
 

@@ -133,11 +133,10 @@ static CGFloat itemWidth = 37;
     NSMutableArray *defaultItemIdentifiers = [NSMutableArray new];
     
     // Add space after the specified toolbar item indices
-    int spaceAfterIndices[] = {}; // No space in the default set
-    int flexibleSpaceAfterIndices[] = {2, 3, 5, 7, 11};
-    int i = 0;
-    int j = 0;
-    int k = 0;
+    // Use membership checks so the empty fixed-space list and the end of the
+    // flexible-space list never cause out-of-bounds C array reads.
+    NSSet<NSNumber *> *flexibleSpaceAfterIndices = [NSSet setWithArray:@[@2, @3, @5, @7, @11]];
+    NSUInteger i = 0;
     
     for (NSString *itemIdentifier in orderedToolbarItemIdentifiers)
     {
@@ -150,18 +149,11 @@ static CGFloat itemWidth = 37;
             [defaultItemIdentifiers addObject:itemIdentifier];
         }
         
-        if (i == spaceAfterIndices[j])
-        {
-            [defaultItemIdentifiers addObject:NSToolbarSpaceItemIdentifier];
-            j++;
-        }
-        
-        if (i == flexibleSpaceAfterIndices[k])
+        if ([flexibleSpaceAfterIndices containsObject:@(i)])
         {
             [defaultItemIdentifiers addObject:NSToolbarFlexibleSpaceItemIdentifier];
-            k++;
         }
-        
+
         i++;
     }
     
